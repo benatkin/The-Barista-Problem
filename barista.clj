@@ -1,5 +1,6 @@
 (ns barista
-(:import (java.text DecimalFormat)))
+  (:use clojure.pprint)
+  (:import (java.text DecimalFormat)))
 
 ;; Consider restructuring the ingredients sub-map to have negative values so you apply it to your
 ;; ingredients and the function would return a new ingredients list
@@ -63,11 +64,13 @@
 
 (defn price-of-drink [drink]
   (reduce +
-	  (map (fn [ingredient] (* (cost (key ingredient)) (val ingredient))) (cookbook drink))))
+	  (map (fn [ingredient] (* (cost (key ingredient)) (val ingredient)))
+	       (cookbook drink))))
 
-(defn price-of-drink [drink]
+(defn price-of-drink [cookbook drink]
   (reduce +
-	  (map (fn [[ingredient quantity]] (* (cost ingredient) quantity)) (cookbook drink))))
+	  (map (fn [[ingredient quantity]] (* (cost ingredient) quantity))
+	       (cookbook drink))))
   
 (defn print-menu [menu]
   (do
@@ -102,8 +105,17 @@
 		     :whipped-cream 10 }))
 
 
+(defn has-enough? [[ingredient amount]]
+  (dosync (> (ingredient @inventory) amount)))
+
+(defn ingredients-present? [inventory drink]
+  "Returns true if the inventory have the necessary ingredients in order to make a drink"
+  (every? true?
+	  (map has-enough?
+	       (cookbook drink))))
+
 (defn reduce-inventory-by-assoc [inventory drink]
-  "Produces a new inventory data structure that has the ingredients for the drink reduced."
+  "Produces a new inventory data structure minus the ingredients for the drink."
   (assoc inventory ))
 	
 	
@@ -112,7 +124,8 @@
   (dosync
    (alter inventory assoc args...)))
 
-
+(defn reduce-inventory-by [inventory drink]
+  "Produces a new inventory data structure minus the ingredients for the drink."
   (into {}
    (map (fn [[ingredient quantity]]
 	  (let [amount-used (ingredient (cookbook drink)), ingredient-name (ingredient-name ingredient)]
@@ -127,7 +140,6 @@
 	      (vector ingredient (- quantity amount-used))
 	      (vector ingredient quantity))))
 
-(defn ammount-used [
 		    
 (defn reduce-stock [[ingredient quantity]]
   (do
